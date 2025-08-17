@@ -1,0 +1,137 @@
+body {
+  width: 320px;
+  padding: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  background-color: #f4f6f8;
+  color: #333;
+  margin: 0;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+.button {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+.status {
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  background: #e9ecef;
+}
+.status.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+.hidden {
+  display: none !important;
+}
+
+/* Player Styles */
+.player-container {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.player-text-wrapper {
+  max-height: 100px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #495057;
+}
+.progress-container {
+  margin-bottom: 8px;
+}
+.seeker {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.time-display {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6c757d;
+}
+.player-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+.player-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  fill: #495057;
+}
+.player-btn:hover {
+  fill: #000;
+}
+.player-btn.play {
+  width: 44px;
+  height: 44px;
+}
+
+/* Settings Styles */
+.settings {
+  border-top: 1px solid #ddd;
+  padding-top: 16px;
+}
+.setting-group {
+  margin-bottom: 12px;
+}
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  font-size: 13px;
+}
+select,
+input[type="password"],
+input[type="range"] {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+input[type="range"] {
+  padding: 0;
+}
+small {
+  font-size: 11px;
+  color: #666;
+}
+small a {
+  color: #4285f4;
+  text-decoration: none;
+}
+small a:hover {
+  text-decoration: underline;
+}

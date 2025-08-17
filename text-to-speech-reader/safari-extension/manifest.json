@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "Text to Speech Reader",
+  "version": "2.0",
+  "description": "Select text and have it read aloud using a sidebar player.",
+  "permissions": ["activeTab", "storage", "tts", "offscreen", "sidePanel"],
+  "browser_action": {
+    "default_title": "Open Text to Speech Reader Sidebar"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
