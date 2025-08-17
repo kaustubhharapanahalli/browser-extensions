@@ -2,173 +2,141 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <style>
-      body {
-        width: 300px;
-        padding: 20px;
-        font-family: Arial, sans-serif;
-      }
-      .container {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-      }
-      .button {
-        background: #4285f4;
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 14px;
-      }
-      .button:hover {
-        background: #3367d6;
-      }
-      .button:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-      }
-      .settings {
-        border-top: 1px solid #eee;
-        padding-top: 15px;
-      }
-      .setting-group {
-        margin-bottom: 10px;
-      }
-      label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: bold;
-      }
-      select,
-      input {
-        width: 100%;
-        padding: 5px;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-      }
-      .status {
-        padding: 10px;
-        border-radius: 5px;
-        margin-top: 10px;
-        display: none;
-      }
-      .status.success {
-        background: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-      }
-      .status.error {
-        background: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-      }
-    </style>
+    <title>Text to Speech Reader</title>
+    <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <div class="container">
-      <h2>Text to Speech Reader</h2>
+      <div class="header">
+        <img src="images/icon48.png" alt="logo" width="24" height="24" />
+        <h2>TTS Reader</h2>
+      </div>
 
-      <button id="readSelected" class="button">Read Selected Text</button>
-      <button id="stopReading" class="button" disabled>Stop Reading</button>
+      <button id="readSelected" class="button primary-button">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+        >
+          <path
+            d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l.707-.707A9.473 9.473 0 0 1 15.026 8c0 2.456-1.02 4.907-2.784 6.707l-.707-.707z"
+          />
+          <path
+            d="M9.828 12.586a6.476 6.476 0 0 0 1.768-4.586 6.476 6.476 0 0 0-1.768-4.586l.707-.707A7.476 7.476 0 0 1 12.026 8a7.476 7.476 0 0 1-1.49 4.886l-.707-.707z"
+          />
+          <path
+            d="M7.414 2.586a2.5 2.5 0 0 1 0 3.536L3.621 9.922a.5.5 0 0 1-.707 0L.214 7.218a.5.5 0 0 1 0-.707l3.536-3.535a2.5 2.5 0 0 1 3.664 0zM2.5 5.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"
+          />
+        </svg>
+        Read Selected
+      </button>
+      <button id="stopReading" class="button" disabled>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+        >
+          <path
+            d="M5 3.5h6A1.5 1.5 0 0 1 12.5 5v6a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 11V5A1.5 1.5 0 0 1 5 3.5z"
+          />
+        </svg>
+        Stop Reading
+      </button>
 
       <div class="settings">
         <div class="setting-group">
-          <label for="ttsProvider">TTS Provider:</label>
+          <label for="ttsProvider">TTS Provider</label>
           <select id="ttsProvider">
-            <option value="chrome">Chrome TTS</option>
-            <option value="gemini">Gemini AI TTS (Native)</option>
-            <option value="googleCloud">Google Cloud TTS (Realistic)</option>
+            <option value="chrome">Chrome TTS (Standard)</option>
+            <option value="gemini">Gemini / Studio (Realistic)</option>
+            <option value="googleCloud">Google Cloud (Wavenet)</option>
           </select>
         </div>
 
-        <div class="setting-group" id="chromeSettings">
-          <label for="voiceSelect">Voice:</label>
-          <select id="voiceSelect"></select>
+        <!-- Chrome TTS Specific Settings -->
+        <div class="provider-settings" id="chromeSettings">
+          <div class="setting-group">
+            <label for="voiceSelect">Voice</label>
+            <select id="voiceSelect"></select>
+          </div>
         </div>
 
-        <div class="setting-group" id="geminiSettings" style="display: none;">
-          <label for="geminiApiKey">Gemini API Key:</label>
-          <input
-            type="password"
-            id="geminiApiKey"
-            placeholder="Enter your Gemini API key"
-          />
-          <small style="color: #666; font-size: 12px;"
-            >Get your API key from
-            <a href="https://makersuite.google.com/app/apikey" target="_blank"
-              >Google AI Studio</a
-            ></small
-          >
-        </div>
-
+        <!-- Gemini TTS Specific Settings -->
         <div
-          class="setting-group"
-          id="geminiVoiceSettings"
+          class="provider-settings"
+          id="geminiSettings"
           style="display: none;"
         >
-          <label for="geminiVoice">Voice:</label>
-          <select id="geminiVoice">
-            <option value="en-US-Studio-M">Studio M (Male, Narrator)</option>
-            <option value="en-US-Studio-O">Studio O (Female, Narrator)</option>
-            <option value="en-US-Neural2-A">Neural2 A (Female, Calm)</option>
-            <option value="en-US-Neural2-D">Neural2 D (Male, Calm)</option>
-            <option value="en-US-Neural2-I">Neural2 I (Female, Bright)</option>
-            <option value="en-US-Neural2-J">Neural2 J (Male, Bright)</option>
-            <option value="en-US-Wavenet-A">WaveNet A (Female)</option>
-            <option value="en-US-Wavenet-B">WaveNet B (Male)</option>
-            <option value="en-US-Wavenet-C"
-              >WaveNet C (Female, Cheerful)</option
+          <div class="setting-group">
+            <label for="geminiApiKey">Gemini/Cloud API Key</label>
+            <input
+              type="password"
+              id="geminiApiKey"
+              placeholder="Enter your Google Cloud API key"
+            />
+            <small
+              >Get key from
+              <a
+                href="https://console.cloud.google.com/apis/credentials"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Google Cloud Console</a
+              ></small
             >
-            <option value="en-US-Wavenet-D">WaveNet D (Male, Cheerful)</option>
-            <option value="en-US-Wavenet-F"
-              >WaveNet F (Female, Assistant)</option
-            >
-          </select>
+          </div>
+          <div class="setting-group">
+            <label for="geminiVoice">Voice</label>
+            <select id="geminiVoice">
+              <option value="en-US-Studio-M">Studio M (Male, Narrator)</option>
+              <option value="en-US-Studio-O"
+                >Studio O (Female, Narrator)</option
+              >
+            </select>
+          </div>
         </div>
 
+        <!-- Google Cloud TTS Specific Settings -->
         <div
-          class="setting-group"
+          class="provider-settings"
           id="googleCloudSettings"
           style="display: none;"
         >
-          <label for="googleCloudApiKey">Google Cloud API Key:</label>
-          <input
-            type="password"
-            id="googleCloudApiKey"
-            placeholder="Enter your Google Cloud API key"
-          />
-          <small style="color: #666; font-size: 12px;"
-            >Get your API key from
-            <a
-              href="https://console.cloud.google.com/apis/credentials"
-              target="_blank"
-              >Google Cloud Console</a
-            ></small
-          >
+          <div class="setting-group">
+            <label for="googleCloudApiKey">Google Cloud API Key</label>
+            <input
+              type="password"
+              id="googleCloudApiKey"
+              placeholder="Enter your Google Cloud API key"
+            />
+            <small
+              >Same key as Gemini.
+              <a
+                href="https://console.cloud.google.com/apis/credentials"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Get key</a
+              ></small
+            >
+          </div>
+          <div class="setting-group">
+            <label for="googleCloudVoice">Voice</label>
+            <select id="googleCloudVoice">
+              <option value="Wavenet-A">Wavenet A (Female)</option>
+              <option value="Wavenet-B">Wavenet B (Male)</option>
+              <option value="Wavenet-C">Wavenet C (Female)</option>
+              <option value="Wavenet-D">Wavenet D (Male)</option>
+              <option value="Wavenet-F">Wavenet F (Female)</option>
+              <option value="Neural2-A">Neural2 A (Female)</option>
+              <option value="Neural2-D">Neural2 D (Male)</option>
+            </select>
+          </div>
         </div>
 
-        <div
-          class="setting-group"
-          id="googleCloudVoiceSettings"
-          style="display: none;"
-        >
-          <label for="googleCloudVoice">Voice:</label>
-          <select id="googleCloudVoice">
-            <option value="Neural2-A">Neural2-A (Female)</option>
-            <option value="Neural2-B">Neural2-B (Male)</option>
-            <option value="Neural2-C">Neural2-C (Female)</option>
-            <option value="Neural2-D">Neural2-D (Male)</option>
-            <option value="Neural2-E">Neural2-E (Female)</option>
-            <option value="Neural2-F">Neural2-F (Male)</option>
-            <option value="Neural2-G">Neural2-G (Female)</option>
-            <option value="Neural2-H">Neural2-H (Male)</option>
-            <option value="Neural2-I">Neural2-I (Female)</option>
-            <option value="Neural2-J">Neural2-J (Male)</option>
-          </select>
-        </div>
-
+        <!-- Common Settings for Rate and Pitch -->
         <div class="setting-group">
           <label for="rateSlider">Speed: <span id="rateValue">1</span></label>
           <input
@@ -180,7 +148,6 @@
             value="1"
           />
         </div>
-
         <div class="setting-group">
           <label for="pitchSlider">Pitch: <span id="pitchValue">1</span></label>
           <input
@@ -196,7 +163,6 @@
 
       <div id="status" class="status"></div>
     </div>
-
     <script src="popup.js"></script>
   </body>
 </html>

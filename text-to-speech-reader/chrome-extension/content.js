@@ -1,88 +1,73 @@
 // Content script for text-to-speech extension
-let selectedText = "";
 
-// Listen for messages from popup
+// --- MESSAGE LISTENER ---
+
+// Listen for messages from the popup to get the currently selected text.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getSelectedText") {
     const text = window.getSelection().toString().trim();
     sendResponse({ text: text });
   }
+  // This listener doesn't need to be async, so we don't return true.
 });
 
-// Add context menu functionality
-document.addEventListener("mouseup", () => {
-  const selection = window.getSelection();
-  selectedText = selection.toString().trim();
+// --- FLOATING BUTTON ---
 
-  // Highlight selected text (optional visual feedback)
-  if (selectedText) {
-    // You can add visual feedback here if needed
-    console.log("Text selected:", selectedText);
-  }
-});
+let floatingButton = null;
 
-// Add keyboard shortcut support (Ctrl+Shift+R or Cmd+Shift+R)
-document.addEventListener("keydown", (event) => {
-  const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-  const modifierKey = isMac ? event.metaKey : event.ctrlKey;
-
-  if (modifierKey && event.shiftKey && event.key === "R") {
-    event.preventDefault();
-
-    const text = window.getSelection().toString().trim();
-    if (text) {
-      // Send message to background script to trigger TTS
-      chrome.runtime.sendMessage({
-        action: "speakText",
-        text: text,
-      });
-    }
-  }
-});
-
-// Add floating button for easy access (optional)
+/**
+ * Creates and injects the floating "Read" button onto the page.
+ */
 function createFloatingButton() {
-  const button = document.createElement("div");
-  button.id = "tts-floating-button";
-  button.innerHTML = "🔊";
-  button.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    background: #4285f4;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 20px;
-    z-index: 10000;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    opacity: 0;
-    transition: opacity 0.3s;
+  // Prevent creating multiple buttons
+  if (document.getElementById("tts-floating-button")) return;
+
+  floatingButton = document.createElement("button");
+  floatingButton.id = "tts-floating-button";
+  floatingButton.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+      <path d="M11.536 14.01A8.473 8.473 0 0 0 14.026 8a8.473 8.473 0 0 0-2.49-6.01l.707-.707A9.473 9.473 0 0 1 15.026 8c0 2.456-1.02 4.907-2.784 6.707l-.707-.707z"/>
+      <path d="M9.828 12.586a6.476 6.476 0 0 0 1.768-4.586 6.476 6.476 0 0 0-1.768-4.586l.707-.707A7.476 7.476 0 0 1 12.026 8a7.476 7.476 0 0 1-1.49 4.886l-.707-.707z"/>
+      <path d="M7.414 2.586a2.5 2.5 0 0 1 0 3.536L3.621 9.922a.5.5 0 0 1-.707 0L.214 7.218a.5.5 0 0 1 0-.707l3.536-3.535a2.5 2.5 0 0 1 3.664 0zM2.5 5.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+    </svg>
   `;
 
-  button.addEventListener("click", () => {
+  document.body.appendChild(floatingButton);
+
+  // Add click listener to read the selected text
+  floatingButton.addEventListener("click", (e) => {
+    e.stopPropagation();
     const text = window.getSelection().toString().trim();
     if (text) {
+      // This sends a message to the background script to use the default TTS engine.
+      // This provides a quick way to read text without opening the popup.
       chrome.runtime.sendMessage({
         action: "speakText",
         text: text,
       });
     }
-  });
-
-  document.body.appendChild(button);
-
-  // Show button when text is selected
-  document.addEventListener("mouseup", () => {
-    const text = window.getSelection().toString().trim();
-    button.style.opacity = text ? "1" : "0";
   });
 }
 
-// Initialize floating button
-createFloatingButton();
+/**
+ * Shows or hides the floating button based on whether text is selected.
+ */
+function toggleFloatingButton() {
+  if (!floatingButton) return;
+  const text = window.getSelection().toString().trim();
+  floatingButton.style.opacity = text ? "1" : "0";
+  floatingButton.style.transform = text ? "scale(1)" : "scale(0.8)";
+  floatingButton.style.pointerEvents = text ? "auto" : "none";
+}
+
+// --- INITIALIZATION ---
+
+// Create the button once the page is loaded
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", createFloatingButton);
+} else {
+  createFloatingButton();
+}
+
+// Show/hide button on text selection change
+document.addEventListener("selectionchange", toggleFloatingButton);

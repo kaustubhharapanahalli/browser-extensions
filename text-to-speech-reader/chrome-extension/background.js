@@ -4,7 +4,10 @@
 
 let creating; // To prevent multiple creation attempts
 
-// Function to setup and ensure the offscreen document is running
+/**
+ * Sets up and ensures the offscreen document is running for audio playback.
+ * @param {string} path The path to the offscreen document's HTML file.
+ */
 async function setupOffscreenDocument(path) {
   // Check if we have an existing offscreen document
   const offscreenUrl = chrome.runtime.getURL(path);
@@ -31,22 +34,35 @@ async function setupOffscreenDocument(path) {
   }
 }
 
-// Function to send audio data to the offscreen document for playback
+/**
+ * Sends audio data to the offscreen document for playback.
+ * @param {string} dataUrl The base64-encoded audio data URL.
+ */
 async function playAudioOffscreen(dataUrl) {
   await setupOffscreenDocument("offscreen.html");
   await chrome.runtime.sendMessage({ action: "playAudio", dataUrl });
 }
 
+/**
+ * Sends a message to the offscreen document to stop any currently playing audio.
+ */
 async function stopAudioOffscreen() {
-  await setupOffscreenDocument("offscreen.html");
-  await chrome.runtime.sendMessage({ action: "stopAudio" });
+  // Check if an offscreen document even exists before trying to send a message.
+  const offscreenUrl = chrome.runtime.getURL("offscreen.html");
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ["OFFSCREEN_DOCUMENT"],
+    documentUrls: [offscreenUrl],
+  });
+
+  if (existingContexts.length > 0) {
+    await chrome.runtime.sendMessage({ action: "stopAudio" });
+  }
 }
 
 // --- MESSAGE LISTENER ---
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "speakText") {
-    // This uses the built-in chrome.tts which is fine
     speakText(request.text);
   } else if (request.action === "speakWithGemini") {
     speakWithGemini(request.text, request.apiKey, request.voice, sendResponse);
@@ -67,55 +83,45 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
-// --- TTS FUNCTIONS (MODIFIED) ---
+// --- TTS FUNCTIONS ---
 
-// Function to speak text using Chrome TTS API (Unchanged)
+/**
+ * Speaks text using the built-in Chrome TTS API.
+ * @param {string} text The text to speak.
+ */
 function speakText(text) {
   chrome.storage.sync.get(["voice", "rate", "pitch"], (result) => {
-    const settings = {
+    chrome.tts.speak(text, {
       voiceName: result.voice || undefined,
       rate: result.rate || 1,
       pitch: result.pitch || 1,
-    };
-    chrome.tts.speak(text, settings, (event) => {
-      if (chrome.runtime.lastError) {
-        console.error("TTS Error:", chrome.runtime.lastError);
-      }
+      onEvent: (event) => {
+        if (event.type === "error") {
+          console.error("TTS Error:", event.errorMessage);
+        }
+      },
     });
   });
 }
 
-// CORRECTED function to speak text using Gemini AI's dedicated TTS model
+/**
+ * Speaks text using Google's Text-to-Speech API (suitable for Gemini/Studio voices).
+ * @param {string} text The text to speak.
+ * @param {string} apiKey The user's Google Cloud API key.
+ * @param {string} voice The selected voice name.
+ * @param {function} sendResponse The callback to send the result to the caller.
+ */
 async function speakWithGemini(text, apiKey, voice, sendResponse) {
   try {
-    // This is the dedicated endpoint for Text-to-Speech synthesis
     const response = await fetch(
-      `https://texttospeech.googleapis.com/v1beta/text:synthesize?key=${apiKey}`,
-      // Note: For simplicity and consistency, the Gemini TTS model can be called via the standard texttospeech endpoint.
-      // Alternatively, if you have access to newer Gemini-specific endpoints, the structure might differ.
-      // This approach is robust and uses the same infra as Google Cloud TTS but with newer models.
+      `https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=${apiKey}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          // The text to be synthesized
-          input: {
-            text: text,
-          },
-          // Voice selection parameters
-          voice: {
-            // The language code is crucial
-            languageCode: "en-US",
-            // The 'voice' parameter from the popup will be the full voice name
-            name: voice,
-          },
-          // Audio configuration
-          audioConfig: {
-            // We'll request MP3 for consistency and smaller file size
-            audioEncoding: "MP3",
-          },
+          input: { text: text },
+          voice: { languageCode: "en-US", name: voice },
+          audioConfig: { audioEncoding: "MP3" },
         }),
       }
     );
@@ -123,23 +129,17 @@ async function speakWithGemini(text, apiKey, voice, sendResponse) {
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        `Gemini/TTS API Error: ${
-          errorData.error?.message || response.statusText
-        }`
+        `API Error: ${errorData.error?.message || response.statusText}`
       );
     }
 
     const data = await response.json();
-
-    // The response structure is the same as the Google Cloud TTS API
     if (data.audioContent) {
-      // Create a data URL from the base64 MP3 content
       const dataUrl = `data:audio/mp3;base64,${data.audioContent}`;
       await playAudioOffscreen(dataUrl);
       sendResponse({ success: true });
     } else {
-      console.error("No audio content in Gemini/TTS response:", data);
-      throw new Error("No audio content received from Gemini/TTS API");
+      throw new Error("No audio content in API response.");
     }
   } catch (error) {
     console.error("Gemini/TTS Error:", error);
@@ -147,7 +147,15 @@ async function speakWithGemini(text, apiKey, voice, sendResponse) {
   }
 }
 
-// Updated function to speak text using Google Cloud Text-to-Speech API
+/**
+ * Speaks text using the Google Cloud Text-to-Speech API.
+ * @param {string} text The text to speak.
+ * @param {string} apiKey The user's Google Cloud API key.
+ * @param {string} voice The selected voice name (e.g., 'Wavenet-A').
+ * @param {number} rate The speaking rate.
+ * @param {number} pitch The speaking pitch.
+ * @param {function} sendResponse The callback to send the result to the caller.
+ */
 async function speakWithGoogleCloud(
   text,
   apiKey,
@@ -161,17 +169,10 @@ async function speakWithGoogleCloud(
       `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          input: {
-            text: text,
-          },
-          voice: {
-            languageCode: "en-US",
-            name: `en-US-${voice}`, // Simplified voice name for clarity
-          },
+          input: { text: text },
+          voice: { languageCode: "en-US", name: `en-US-${voice}` },
           audioConfig: {
             audioEncoding: "MP3",
             speakingRate: rate,
@@ -184,35 +185,39 @@ async function speakWithGoogleCloud(
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
-        `TTS API Error: ${errorData.error?.message || response.statusText}`
+        `API Error: ${errorData.error?.message || response.statusText}`
       );
     }
 
     const data = await response.json();
-
     if (data.audioContent) {
-      // Create a data URL from the base64 MP3 content
       const dataUrl = `data:audio/mp3;base64,${data.audioContent}`;
       await playAudioOffscreen(dataUrl);
       sendResponse({ success: true });
     } else {
-      throw new Error("No audio content received from TTS API");
+      throw new Error("No audio content received from API.");
     }
   } catch (error) {
-    console.error("TTS API Error:", error);
+    console.error("Google Cloud TTS Error:", error);
     sendResponse({ success: false, error: error.message });
   }
 }
 
-// --- CONTEXT MENU AND INSTALL LISTENERS (Mostly Unchanged) ---
+// --- CONTEXT MENU AND INSTALL LISTENERS ---
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("Text to Speech Reader extension installed");
+  console.log("Text to Speech Reader extension installed.");
+  // Set default values on installation
   chrome.storage.sync.set({
+    ttsProvider: "chrome",
     voice: "",
     rate: 1,
     pitch: 1,
+    geminiApiKey: "",
+    googleCloudApiKey: "",
   });
+
+  // Create context menu item
   chrome.contextMenus.create({
     id: "readSelectedText",
     title: "Read Selected Text",
@@ -221,7 +226,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
-  if (info.menuItemId === "readSelectedText") {
+  if (info.menuItemId === "readSelectedText" && info.selectionText) {
     // By default, context menu uses the simple Chrome TTS
     speakText(info.selectionText);
   }
