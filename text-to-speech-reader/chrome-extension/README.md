@@ -1,18 +1,23 @@
 # Text to Speech Reader - Chrome Extension
 
-A Chrome extension that allows you to select text on any webpage and have it read aloud using text-to-speech technology.
+A Chrome extension that allows you to select text on any webpage and have it read aloud using text-to-speech technology with a modern sidebar interface.
 
 ## Features
 
 - **Text Selection**: Select any text on a webpage and have it read aloud
-- **Voice Control**: Choose from available system voices
+- **Sidebar Interface**: Modern, persistent sidebar for easy access and control
+- **Multiple TTS Providers**:
+  - Chrome TTS (Standard)
+  - Gemini AI TTS (Realistic)
+- **Voice Control**: Choose from available system voices or Gemini AI voices
 - **Speed & Pitch Control**: Adjust reading speed and pitch
+- **Audio Player Controls**: Play, pause, stop, and replay functionality
 - **Multiple Access Methods**:
-  - Popup interface
-  - Floating button (appears when text is selected)
-  - Keyboard shortcut (Ctrl+Shift+R or Cmd+Shift+R)
+  - Sidebar interface (click extension icon)
   - Right-click context menu
+  - Keyboard shortcuts
 - **Settings Persistence**: Your voice, speed, and pitch preferences are saved
+- **Offscreen Audio Playback**: Reliable audio playback using offscreen documents
 
 ## Installation
 
@@ -28,42 +33,53 @@ A Chrome extension that allows you to select text on any webpage and have it rea
 
 3. **Verify Installation**:
    - You should see the extension icon in your Chrome toolbar
-   - Click the icon to open the popup interface
+   - Click the icon to open the sidebar interface
 
 ## Usage
 
-### Method 1: Popup Interface
+### Method 1: Sidebar Interface
 
-1. Click the extension icon in the toolbar
+1. Click the extension icon in the toolbar to open the sidebar
 2. Select text on the current webpage
-3. Click "Read Selected Text" in the popup
-4. Use the controls to adjust voice, speed, and pitch
+3. Click "Read Selected Text" in the sidebar
+4. Use the audio player controls to manage playback
+5. Adjust settings for voice, speed, and pitch
 
-### Method 2: Floating Button
-
-1. Select text on any webpage
-2. A floating 🔊 button will appear in the top-right corner
-3. Click the button to read the selected text
-
-### Method 3: Keyboard Shortcut
-
-1. Select text on any webpage
-2. Press `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac)
-3. The text will be read aloud
-
-### Method 4: Context Menu
+### Method 2: Context Menu
 
 1. Select text on any webpage
 2. Right-click the selected text
 3. Choose "Read Selected Text" from the context menu
+4. The sidebar will open automatically and start reading
 
 ## Settings
 
-- **Voice**: Choose from available system voices
+### TTS Provider
+
+- **Chrome TTS**: Uses Chrome's built-in text-to-speech engine
+- **Gemini AI TTS**: Uses Google's Gemini AI for more realistic speech (requires API key)
+
+### Voice Settings
+
+- **Chrome TTS**: Choose from available system voices
+- **Gemini AI TTS**: Choose from Gemini AI voices (Zephyr, Puck, Charon, etc.)
+
+### Audio Controls
+
 - **Speed**: Adjust reading speed (0.5x to 2x)
 - **Pitch**: Adjust voice pitch (0.5x to 2x)
 
 All settings are automatically saved and will be remembered across browser sessions.
+
+## Gemini AI Setup
+
+To use Gemini AI TTS:
+
+1. Get an API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Open the sidebar and select "Gemini TTS (Realistic)" as the provider
+3. Enter your API key in the settings
+4. Choose your preferred Gemini voice
+5. Select text and click "Read Selected Text"
 
 ## Permissions
 
@@ -73,21 +89,25 @@ This extension requires the following permissions:
 - `scripting`: To inject content scripts
 - `storage`: To save your preferences
 - `tts`: To use Chrome's text-to-speech API
+- `contextMenus`: To create right-click context menu
+- `offscreen`: To enable audio playback in offscreen documents
+- `sidePanel`: To display the sidebar interface
 
 ## Troubleshooting
 
 1. **No voices available**: Make sure your system has text-to-speech voices installed
 2. **Extension not working**: Try refreshing the webpage or restarting Chrome
 3. **Audio not playing**: Check your system's audio settings and volume
-4. **"Cannot read properties of undefined (reading 'speak')" error**:
+4. **Sidebar not opening**: Make sure the extension is properly loaded and has the `sidePanel` permission
+5. **Gemini API errors**:
+   - Verify your API key is correct
+   - Check that you have sufficient API quota
+   - Ensure the API key has access to Gemini models
+6. **"Cannot read properties of undefined (reading 'speak')" error**:
    - Make sure you've reloaded the extension after installation
    - Check that the extension has the `tts` permission
-   - Try using Google Cloud TTS instead of Chrome TTS
+   - Try using Gemini TTS instead of Chrome TTS
    - Check the browser console for additional error messages
-5. **Chrome TTS API not available**: 
-   - This usually means the extension needs to be reloaded
-   - Go to `chrome://extensions/` and click the refresh icon on the extension
-   - Or try using Google Cloud TTS as an alternative
 
 ## Development
 
@@ -103,16 +123,14 @@ To modify the extension:
 ```txt
 chrome-extension/
 ├── manifest.json          # Extension configuration
-├── popup.html            # Popup interface
-├── popup.js              # Popup functionality
-├── content.js            # Content script for web pages
-├── content.css           # Styles for content script
-├── background.js         # Background service worker
-├── icons/                # Extension icons
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md             # This file
+├── sidebar.html           # Sidebar interface
+├── sidebar.js             # Sidebar functionality
+├── sidebar.css            # Sidebar styles
+├── content.js             # Content script for web pages
+├── background.js          # Background service worker
+├── offscreen.html         # Offscreen document for audio playback
+├── offscreen.js           # Offscreen audio handling
+└── README.md              # This file
 ```
 
 ## License

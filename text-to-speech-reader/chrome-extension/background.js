@@ -149,7 +149,7 @@ async function speakWithGemini(text, apiKey, voice) {
     action: "audioStateChange",
     state: "generating",
   });
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-tts:generateContent?key=${apiKey}`;
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
   try {
     const response = await fetch(API_URL, {
       method: "POST",
