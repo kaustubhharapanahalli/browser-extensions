@@ -52,8 +52,7 @@
           <label for="ttsProvider">TTS Provider</label>
           <select id="ttsProvider">
             <option value="chrome">Chrome TTS (Standard)</option>
-            <option value="gemini">Gemini / Studio (Realistic)</option>
-            <option value="googleCloud">Google Cloud (Wavenet)</option>
+            <option value="gemini">Gemini TTS (Realistic)</option>
           </select>
         </div>
 
@@ -72,92 +71,62 @@
           style="display: none;"
         >
           <div class="setting-group">
-            <label for="geminiApiKey">Gemini/Cloud API Key</label>
+            <label for="geminiApiKey">Gemini API Key</label>
             <input
               type="password"
               id="geminiApiKey"
-              placeholder="Enter your Google Cloud API key"
+              placeholder="Enter your Gemini API key"
             />
             <small
               >Get key from
               <a
-                href="https://console.cloud.google.com/apis/credentials"
+                href="https://makersuite.google.com/app/apikey"
                 target="_blank"
                 rel="noopener noreferrer"
-                >Google Cloud Console</a
+                >Google AI Studio</a
               ></small
             >
           </div>
           <div class="setting-group">
             <label for="geminiVoice">Voice</label>
             <select id="geminiVoice">
-              <option value="en-US-Studio-M">Studio M (Male, Narrator)</option>
-              <option value="en-US-Studio-O"
-                >Studio O (Female, Narrator)</option
-              >
+              <option value="Zephyr">Zephyr (Bright)</option>
+              <option value="Puck">Puck (Upbeat)</option>
+              <option value="Charon">Charon (Informative)</option>
+              <option value="Kore">Kore (Firm)</option>
+              <option value="Fenrir">Fenrir (Excitable)</option>
+              <option value="Leda">Leda (Youthful)</option>
+              <option value="Orus">Orus (Firm)</option>
             </select>
           </div>
         </div>
 
-        <!-- Google Cloud TTS Specific Settings -->
-        <div
-          class="provider-settings"
-          id="googleCloudSettings"
-          style="display: none;"
-        >
+        <!-- Common Settings for Rate and Pitch (Only affect Chrome TTS) -->
+        <div id="commonControls">
           <div class="setting-group">
-            <label for="googleCloudApiKey">Google Cloud API Key</label>
+            <label for="rateSlider">Speed: <span id="rateValue">1</span></label>
             <input
-              type="password"
-              id="googleCloudApiKey"
-              placeholder="Enter your Google Cloud API key"
+              type="range"
+              id="rateSlider"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value="1"
             />
-            <small
-              >Same key as Gemini.
-              <a
-                href="https://console.cloud.google.com/apis/credentials"
-                target="_blank"
-                rel="noopener noreferrer"
-                >Get key</a
-              ></small
-            >
           </div>
           <div class="setting-group">
-            <label for="googleCloudVoice">Voice</label>
-            <select id="googleCloudVoice">
-              <option value="Wavenet-A">Wavenet A (Female)</option>
-              <option value="Wavenet-B">Wavenet B (Male)</option>
-              <option value="Wavenet-C">Wavenet C (Female)</option>
-              <option value="Wavenet-D">Wavenet D (Male)</option>
-              <option value="Wavenet-F">Wavenet F (Female)</option>
-              <option value="Neural2-A">Neural2 A (Female)</option>
-              <option value="Neural2-D">Neural2 D (Male)</option>
-            </select>
+            <label for="pitchSlider"
+              >Pitch: <span id="pitchValue">1</span></label
+            >
+            <input
+              type="range"
+              id="pitchSlider"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value="1"
+            />
           </div>
-        </div>
-
-        <!-- Common Settings for Rate and Pitch -->
-        <div class="setting-group">
-          <label for="rateSlider">Speed: <span id="rateValue">1</span></label>
-          <input
-            type="range"
-            id="rateSlider"
-            min="0.5"
-            max="2"
-            step="0.1"
-            value="1"
-          />
-        </div>
-        <div class="setting-group">
-          <label for="pitchSlider">Pitch: <span id="pitchValue">1</span></label>
-          <input
-            type="range"
-            id="pitchSlider"
-            min="0.5"
-            max="2"
-            step="0.1"
-            value="1"
-          />
         </div>
       </div>
 
