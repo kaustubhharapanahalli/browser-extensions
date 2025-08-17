@@ -78,7 +78,7 @@
           <label for="ttsProvider">TTS Provider:</label>
           <select id="ttsProvider">
             <option value="chrome">Chrome TTS</option>
-            <option value="gemini">Gemini AI + Free TTS</option>
+            <option value="gemini">Gemini AI TTS (Native)</option>
             <option value="googleCloud">Google Cloud TTS (Realistic)</option>
           </select>
         </div>
@@ -108,13 +108,23 @@
           id="geminiVoiceSettings"
           style="display: none;"
         >
-          <label for="geminiVoice">Voice Style:</label>
+          <label for="geminiVoice">Voice:</label>
           <select id="geminiVoice">
-            <option value="natural">Natural</option>
-            <option value="formal">Formal</option>
-            <option value="casual">Casual</option>
-            <option value="professional">Professional</option>
-            <option value="friendly">Friendly</option>
+            <option value="en-US-Studio-M">Studio M (Male, Narrator)</option>
+            <option value="en-US-Studio-O">Studio O (Female, Narrator)</option>
+            <option value="en-US-Neural2-A">Neural2 A (Female, Calm)</option>
+            <option value="en-US-Neural2-D">Neural2 D (Male, Calm)</option>
+            <option value="en-US-Neural2-I">Neural2 I (Female, Bright)</option>
+            <option value="en-US-Neural2-J">Neural2 J (Male, Bright)</option>
+            <option value="en-US-Wavenet-A">WaveNet A (Female)</option>
+            <option value="en-US-Wavenet-B">WaveNet B (Male)</option>
+            <option value="en-US-Wavenet-C"
+              >WaveNet C (Female, Cheerful)</option
+            >
+            <option value="en-US-Wavenet-D">WaveNet D (Male, Cheerful)</option>
+            <option value="en-US-Wavenet-F"
+              >WaveNet F (Female, Assistant)</option
+            >
           </select>
         </div>
 

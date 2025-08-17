@@ -205,7 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
           }
         } else if (provider === "gemini") {
-          // Use Gemini AI for text enhancement + Free TTS
+          // Use Gemini AI native TTS
           if (!geminiApiKey.value.trim()) {
             showStatus("Please enter your Gemini API key", "error");
             return;
@@ -213,25 +213,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
           readSelectedBtn.disabled = true;
           stopReadingBtn.disabled = false;
-          showStatus("Enhancing text with Gemini AI...");
+          showStatus("Generating speech with Gemini AI...");
 
-          // Send message to background script to handle Gemini AI + Free TTS
+          // Send message to background script to handle Gemini AI TTS
           chrome.runtime.sendMessage(
             {
               action: "speakWithGemini",
               text: response.text,
               apiKey: geminiApiKey.value,
-              voiceStyle: geminiVoice.value,
-              rate: parseFloat(rateSlider.value),
-              pitch: parseFloat(pitchSlider.value),
+              voice: geminiVoice.value,
             },
             (response) => {
-              if (response.success) {
-                showStatus("Reading with Gemini AI enhanced text...");
+              readSelectedBtn.disabled = false; // Re-enable button
+              stopReadingBtn.disabled = true; // Disable stop after request
+              if (response && response.success) {
+                showStatus("Reading with Gemini AI...");
               } else {
-                readSelectedBtn.disabled = false;
-                stopReadingBtn.disabled = true;
-                showStatus("Error: " + response.error, "error");
+                showStatus(
+                  "Error: " + (response ? response.error : "Unknown error"),
+                  "error"
+                );
               }
             }
           );
@@ -257,12 +258,15 @@ document.addEventListener("DOMContentLoaded", function () {
               pitch: parseFloat(pitchSlider.value),
             },
             (response) => {
-              if (response.success) {
+              readSelectedBtn.disabled = false; // Re-enable button
+              stopReadingBtn.disabled = true; // Disable stop after request
+              if (response && response.success) {
                 showStatus("Reading with Google Cloud TTS...");
               } else {
-                readSelectedBtn.disabled = false;
-                stopReadingBtn.disabled = true;
-                showStatus("Error: " + response.error, "error");
+                showStatus(
+                  "Error: " + (response ? response.error : "Unknown error"),
+                  "error"
+                );
               }
             }
           );
@@ -277,9 +281,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Stop reading
   stopReadingBtn.addEventListener("click", () => {
+    // This will stop the built-in Chrome TTS
     if (typeof chrome !== "undefined" && chrome.tts) {
       chrome.tts.stop();
     }
+    // This will send a message to stop audio in the offscreen document
+    // for Gemini and Google Cloud
+    chrome.runtime.sendMessage({ action: "stopAudio" });
+
     readSelectedBtn.disabled = false;
     stopReadingBtn.disabled = true;
     showStatus("Reading stopped");

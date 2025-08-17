@@ -3,7 +3,14 @@
   "name": "Text to Speech Reader",
   "version": "1.0",
   "description": "Select text and have it read aloud",
-  "permissions": ["activeTab", "scripting", "storage", "tts", "contextMenus"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tts",
+    "contextMenus",
+    "offscreen"
+  ],
   "action": {
     "default_popup": "popup.html",
     "default_title": "Text to Speech Reader"
