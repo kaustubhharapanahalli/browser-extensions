@@ -11,12 +11,25 @@ chrome.action.onClicked.addListener((tab) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (sender.url?.includes("offscreen.html")) {
     chrome.runtime.sendMessage(request); // Forward messages from offscreen to sidebar
-    return;
+    return true;
   }
 
   switch (request.action) {
     case "speakText":
-      handleSpeakText(request.text, sender.tab);
+      // FIX: If the message is from the sidebar, sender.tab is undefined.
+      // We must query for the active tab to get the correct context.
+      if (!sender.tab) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs[0]) {
+            handleSpeakText(request.text, tabs[0]);
+          } else {
+            console.error("Could not find active tab to speak on.");
+          }
+        });
+      } else {
+        // If the message is from a content script, sender.tab is available.
+        handleSpeakText(request.text, sender.tab);
+      }
       break;
     case "audioControl":
       handleAudioControl(request);
@@ -37,6 +50,7 @@ async function handleAudioControl(request) {
   if (ttsProvider === "gemini") {
     await setupOffscreenDocument("offscreen.html");
     // The message is broadcast globally, and the offscreen script will pick it up.
+    chrome.runtime.sendMessage(request);
   } else {
     // Handle Chrome TTS controls directly and send UI updates.
     if (request.control === "stop") {
@@ -44,7 +58,6 @@ async function handleAudioControl(request) {
     }
     if (request.control === "pause") {
       chrome.tts.pause();
-      // Manually send state update for immediate UI feedback.
       chrome.runtime.sendMessage({
         action: "audioStateChange",
         state: "paused",
@@ -52,7 +65,6 @@ async function handleAudioControl(request) {
     }
     if (request.control === "resume") {
       chrome.tts.resume();
-      // Manually send state update for immediate UI feedback.
       chrome.runtime.sendMessage({
         action: "audioStateChange",
         state: "playing",
@@ -95,11 +107,6 @@ async function handleSpeakText(text, tab) {
 
 // --- TTS FUNCTIONS ---
 
-/**
- * Speaks text using the built-in Chrome TTS engine and syncs state with the sidebar.
- * @param {string} text The text to speak.
- * @param {chrome.tabs.Tab} tab The tab that initiated the speech.
- */
 function speakWithChromeTTS(text, tab) {
   chrome.storage.sync.get(["voice", "rate", "pitch"], (result) => {
     chrome.tts.speak(text, {
@@ -107,7 +114,6 @@ function speakWithChromeTTS(text, tab) {
       rate: result.rate || 1,
       pitch: result.pitch || 1,
       onEvent: (event) => {
-        // FIX: Translate chrome.tts events into the sidebar's expected state messages.
         switch (event.type) {
           case "start":
             speakingTabId = tab.id;
@@ -143,7 +149,7 @@ async function speakWithGemini(text, apiKey, voice) {
     action: "audioStateChange",
     state: "generating",
   });
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro-preview-tts:generateContent?key=${apiKey}`;
   try {
     const response = await fetch(API_URL, {
       method: "POST",
@@ -242,7 +248,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-// FIX: Add a listener to stop audio when the speaking tab is closed.
 chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
   if (tabId === speakingTabId) {
     chrome.tts.stop();
