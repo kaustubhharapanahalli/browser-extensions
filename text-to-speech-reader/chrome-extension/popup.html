@@ -78,7 +78,8 @@
           <label for="ttsProvider">TTS Provider:</label>
           <select id="ttsProvider">
             <option value="chrome">Chrome TTS</option>
-            <option value="gemini">Google Cloud TTS (Realistic)</option>
+            <option value="gemini">Gemini AI + Free TTS</option>
+            <option value="googleCloud">Google Cloud TTS (Realistic)</option>
           </select>
         </div>
 
@@ -88,10 +89,44 @@
         </div>
 
         <div class="setting-group" id="geminiSettings" style="display: none;">
-          <label for="geminiApiKey">Google Cloud API Key:</label>
+          <label for="geminiApiKey">Gemini API Key:</label>
           <input
             type="password"
             id="geminiApiKey"
+            placeholder="Enter your Gemini API key"
+          />
+          <small style="color: #666; font-size: 12px;"
+            >Get your API key from
+            <a href="https://makersuite.google.com/app/apikey" target="_blank"
+              >Google AI Studio</a
+            ></small
+          >
+        </div>
+
+        <div
+          class="setting-group"
+          id="geminiVoiceSettings"
+          style="display: none;"
+        >
+          <label for="geminiVoice">Voice Style:</label>
+          <select id="geminiVoice">
+            <option value="natural">Natural</option>
+            <option value="formal">Formal</option>
+            <option value="casual">Casual</option>
+            <option value="professional">Professional</option>
+            <option value="friendly">Friendly</option>
+          </select>
+        </div>
+
+        <div
+          class="setting-group"
+          id="googleCloudSettings"
+          style="display: none;"
+        >
+          <label for="googleCloudApiKey">Google Cloud API Key:</label>
+          <input
+            type="password"
+            id="googleCloudApiKey"
             placeholder="Enter your Google Cloud API key"
           />
           <small style="color: #666; font-size: 12px;"
@@ -106,11 +141,11 @@
 
         <div
           class="setting-group"
-          id="geminiVoiceSettings"
+          id="googleCloudVoiceSettings"
           style="display: none;"
         >
-          <label for="geminiVoice">Voice:</label>
-          <select id="geminiVoice">
+          <label for="googleCloudVoice">Voice:</label>
+          <select id="googleCloudVoice">
             <option value="Neural2-A">Neural2-A (Female)</option>
             <option value="Neural2-B">Neural2-B (Male)</option>
             <option value="Neural2-C">Neural2-C (Female)</option>

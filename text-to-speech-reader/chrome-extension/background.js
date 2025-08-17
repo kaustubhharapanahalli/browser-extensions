@@ -5,7 +5,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "speakText") {
     speakText(request.text);
   } else if (request.action === "speakWithGemini") {
-    speakWithGemini(
+    speakWithGeminiEnhanced(
+      request.text,
+      request.apiKey,
+      request.voiceStyle,
+      request.rate,
+      request.pitch,
+      sendResponse
+    );
+    return true; // Keep the message channel open for async response
+  } else if (request.action === "speakWithGoogleCloud") {
+    speakWithGoogleCloud(
       request.text,
       request.apiKey,
       request.voice,
@@ -46,8 +56,132 @@ function speakText(text) {
   });
 }
 
+// Function to speak text using Gemini AI for enhancement + Free TTS
+async function speakWithGeminiEnhanced(
+  text,
+  apiKey,
+  voiceStyle,
+  rate,
+  pitch,
+  sendResponse
+) {
+  try {
+    // First, use Gemini to enhance the text
+    const enhancedText = await enhanceTextWithGemini(text, apiKey, voiceStyle);
+
+    // Then use a free TTS service
+    await speakWithFreeTTS(enhancedText, rate, pitch, sendResponse);
+  } catch (error) {
+    console.error("Gemini Enhanced TTS Error:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+// Function to enhance text using Gemini AI
+async function enhanceTextWithGemini(text, apiKey, voiceStyle) {
+  const prompt = `Please enhance the following text for better speech synthesis. Make it more natural and readable while maintaining the original meaning. Style: ${voiceStyle}. Text: "${text}"`;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      `Gemini API Error: ${errorData.error?.message || response.statusText}`
+    );
+  }
+
+  const data = await response.json();
+
+  if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+    return data.candidates[0].content.parts[0].text;
+  } else {
+    // Fallback to original text if Gemini fails
+    return text;
+  }
+}
+
+// Function to speak text using free TTS service
+async function speakWithFreeTTS(text, rate, pitch, sendResponse) {
+  try {
+    // Use a free TTS service (e.g., ResponsiveVoice or similar)
+    // For now, we'll use Chrome TTS as fallback
+    if (typeof chrome !== "undefined" && chrome.tts) {
+      chrome.tts.speak(
+        text,
+        {
+          rate: rate,
+          pitch: pitch,
+        },
+        (event) => {
+          if (chrome.runtime.lastError) {
+            console.error("TTS Error:", chrome.runtime.lastError);
+            sendResponse({ success: false, error: "Failed to play audio" });
+          } else if (event && event.type === "end") {
+            sendResponse({ success: true });
+          }
+        }
+      );
+    } else {
+      // Alternative: Use Web Speech API
+      if ("speechSynthesis" in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = rate;
+        utterance.pitch = pitch;
+
+        utterance.onend = () => {
+          sendResponse({ success: true });
+        };
+
+        utterance.onerror = (error) => {
+          console.error("Speech synthesis error:", error);
+          sendResponse({ success: false, error: "Failed to play audio" });
+        };
+
+        speechSynthesis.speak(utterance);
+      } else {
+        throw new Error("No TTS service available");
+      }
+    }
+  } catch (error) {
+    console.error("Free TTS Error:", error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
 // Function to speak text using Google Cloud Text-to-Speech API
-async function speakWithGemini(text, apiKey, voice, rate, pitch, sendResponse) {
+async function speakWithGoogleCloud(
+  text,
+  apiKey,
+  voice,
+  rate,
+  pitch,
+  sendResponse
+) {
   try {
     // Use Google Cloud Text-to-Speech API for realistic speech
     const response = await fetch(

@@ -5,9 +5,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const voiceSelect = document.getElementById("voiceSelect");
   const geminiApiKey = document.getElementById("geminiApiKey");
   const geminiVoice = document.getElementById("geminiVoice");
+  const googleCloudApiKey = document.getElementById("googleCloudApiKey");
+  const googleCloudVoice = document.getElementById("googleCloudVoice");
   const chromeSettings = document.getElementById("chromeSettings");
   const geminiSettings = document.getElementById("geminiSettings");
   const geminiVoiceSettings = document.getElementById("geminiVoiceSettings");
+  const googleCloudSettings = document.getElementById("googleCloudSettings");
+  const googleCloudVoiceSettings = document.getElementById(
+    "googleCloudVoiceSettings"
+  );
   const rateSlider = document.getElementById("rateSlider");
   const pitchSlider = document.getElementById("pitchSlider");
   const rateValue = document.getElementById("rateValue");
@@ -53,7 +59,16 @@ document.addEventListener("DOMContentLoaded", function () {
   // Load saved settings
   function loadSettings() {
     chrome.storage.sync.get(
-      ["ttsProvider", "voice", "geminiApiKey", "geminiVoice", "rate", "pitch"],
+      [
+        "ttsProvider",
+        "voice",
+        "geminiApiKey",
+        "geminiVoice",
+        "googleCloudApiKey",
+        "googleCloudVoice",
+        "rate",
+        "pitch",
+      ],
       (result) => {
         if (result.ttsProvider) {
           ttsProvider.value = result.ttsProvider;
@@ -67,6 +82,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (result.geminiVoice) {
           geminiVoice.value = result.geminiVoice;
+        }
+        if (result.googleCloudApiKey) {
+          googleCloudApiKey.value = result.googleCloudApiKey;
+        }
+        if (result.googleCloudVoice) {
+          googleCloudVoice.value = result.googleCloudVoice;
         }
         if (result.rate) {
           rateSlider.value = result.rate;
@@ -87,6 +108,8 @@ document.addEventListener("DOMContentLoaded", function () {
       voice: voiceSelect.value,
       geminiApiKey: geminiApiKey.value,
       geminiVoice: geminiVoice.value,
+      googleCloudApiKey: googleCloudApiKey.value,
+      googleCloudVoice: googleCloudVoice.value,
       rate: parseFloat(rateSlider.value),
       pitch: parseFloat(pitchSlider.value),
     });
@@ -94,14 +117,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Toggle provider-specific settings
   function toggleProviderSettings(provider) {
+    // Hide all settings first
+    chromeSettings.style.display = "none";
+    geminiSettings.style.display = "none";
+    geminiVoiceSettings.style.display = "none";
+    googleCloudSettings.style.display = "none";
+    googleCloudVoiceSettings.style.display = "none";
+
     if (provider === "chrome") {
       chromeSettings.style.display = "block";
-      geminiSettings.style.display = "none";
-      geminiVoiceSettings.style.display = "none";
     } else if (provider === "gemini") {
-      chromeSettings.style.display = "none";
       geminiSettings.style.display = "block";
       geminiVoiceSettings.style.display = "block";
+    } else if (provider === "googleCloud") {
+      googleCloudSettings.style.display = "block";
+      googleCloudVoiceSettings.style.display = "block";
     }
   }
 
@@ -175,8 +205,39 @@ document.addEventListener("DOMContentLoaded", function () {
             );
           }
         } else if (provider === "gemini") {
-          // Use Google Cloud TTS API
+          // Use Gemini AI for text enhancement + Free TTS
           if (!geminiApiKey.value.trim()) {
+            showStatus("Please enter your Gemini API key", "error");
+            return;
+          }
+
+          readSelectedBtn.disabled = true;
+          stopReadingBtn.disabled = false;
+          showStatus("Enhancing text with Gemini AI...");
+
+          // Send message to background script to handle Gemini AI + Free TTS
+          chrome.runtime.sendMessage(
+            {
+              action: "speakWithGemini",
+              text: response.text,
+              apiKey: geminiApiKey.value,
+              voiceStyle: geminiVoice.value,
+              rate: parseFloat(rateSlider.value),
+              pitch: parseFloat(pitchSlider.value),
+            },
+            (response) => {
+              if (response.success) {
+                showStatus("Reading with Gemini AI enhanced text...");
+              } else {
+                readSelectedBtn.disabled = false;
+                stopReadingBtn.disabled = true;
+                showStatus("Error: " + response.error, "error");
+              }
+            }
+          );
+        } else if (provider === "googleCloud") {
+          // Use Google Cloud TTS API
+          if (!googleCloudApiKey.value.trim()) {
             showStatus("Please enter your Google Cloud API key", "error");
             return;
           }
@@ -188,10 +249,10 @@ document.addEventListener("DOMContentLoaded", function () {
           // Send message to background script to handle Google Cloud TTS API
           chrome.runtime.sendMessage(
             {
-              action: "speakWithGemini",
+              action: "speakWithGoogleCloud",
               text: response.text,
-              apiKey: geminiApiKey.value,
-              voice: geminiVoice.value,
+              apiKey: googleCloudApiKey.value,
+              voice: googleCloudVoice.value,
               rate: parseFloat(rateSlider.value),
               pitch: parseFloat(pitchSlider.value),
             },
