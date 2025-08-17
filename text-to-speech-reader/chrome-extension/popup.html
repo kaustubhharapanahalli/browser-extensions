@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        width: 300px;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      .button {
+        background: #4285f4;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .button:hover {
+        background: #3367d6;
+      }
+      .button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      .settings {
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+      }
+      .setting-group {
+        margin-bottom: 10px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      select,
+      input {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        display: none;
+      }
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Text to Speech Reader</h2>
+
+      <button id="readSelected" class="button">Read Selected Text</button>
+      <button id="stopReading" class="button" disabled>Stop Reading</button>
+
+      <div class="settings">
+        <div class="setting-group">
+          <label for="ttsProvider">TTS Provider:</label>
+          <select id="ttsProvider">
+            <option value="chrome">Chrome TTS</option>
+            <option value="gemini">Google Cloud TTS (Realistic)</option>
+          </select>
+        </div>
+
+        <div class="setting-group" id="chromeSettings">
+          <label for="voiceSelect">Voice:</label>
+          <select id="voiceSelect"></select>
+        </div>
+
+        <div class="setting-group" id="geminiSettings" style="display: none;">
+          <label for="geminiApiKey">Google Cloud API Key:</label>
+          <input
+            type="password"
+            id="geminiApiKey"
+            placeholder="Enter your Google Cloud API key"
+          />
+          <small style="color: #666; font-size: 12px;"
+            >Get your API key from
+            <a
+              href="https://console.cloud.google.com/apis/credentials"
+              target="_blank"
+              >Google Cloud Console</a
+            ></small
+          >
+        </div>
+
+        <div
+          class="setting-group"
+          id="geminiVoiceSettings"
+          style="display: none;"
+        >
+          <label for="geminiVoice">Voice:</label>
+          <select id="geminiVoice">
+            <option value="Neural2-A">Neural2-A (Female)</option>
+            <option value="Neural2-B">Neural2-B (Male)</option>
+            <option value="Neural2-C">Neural2-C (Female)</option>
+            <option value="Neural2-D">Neural2-D (Male)</option>
+            <option value="Neural2-E">Neural2-E (Female)</option>
+            <option value="Neural2-F">Neural2-F (Male)</option>
+            <option value="Neural2-G">Neural2-G (Female)</option>
+            <option value="Neural2-H">Neural2-H (Male)</option>
+            <option value="Neural2-I">Neural2-I (Female)</option>
+            <option value="Neural2-J">Neural2-J (Male)</option>
+          </select>
+        </div>
+
+        <div class="setting-group">
+          <label for="rateSlider">Speed: <span id="rateValue">1</span></label>
+          <input
+            type="range"
+            id="rateSlider"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value="1"
+          />
+        </div>
+
+        <div class="setting-group">
+          <label for="pitchSlider">Pitch: <span id="pitchValue">1</span></label>
+          <input
+            type="range"
+            id="pitchSlider"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value="1"
+          />
+        </div>
+      </div>
+
+      <div id="status" class="status"></div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
