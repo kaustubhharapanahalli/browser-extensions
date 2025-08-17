@@ -1,0 +1,31 @@
+{
+  "name": "text-to-speech-reader-extensions",
+  "version": "1.0.0",
+  "description": "Chrome and Safari extensions for reading selected text aloud using text-to-speech",
+  "main": "README.md",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0",
+    "build": "echo \"Extensions are ready to use\" && exit 0"
+  },
+  "keywords": [
+    "chrome-extension",
+    "safari-extension",
+    "text-to-speech",
+    "tts",
+    "accessibility",
+    "browser-extension"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/text-to-speech-reader-extensions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/text-to-speech-reader-extensions/issues"
+  },
+  "homepage": "https://github.com/yourusername/text-to-speech-reader-extensions#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
