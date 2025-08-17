@@ -1,19 +1,22 @@
 {
   "manifest_version": 3,
   "name": "Text to Speech Reader",
-  "version": "1.1",
-  "description": "Select text and have it read aloud using various TTS providers.",
+  "version": "2.0",
+  "description": "Select text and have it read aloud using a sidebar player.",
   "permissions": [
     "activeTab",
     "scripting",
     "storage",
     "tts",
     "contextMenus",
-    "offscreen"
+    "offscreen",
+    "sidePanel"
   ],
   "action": {
-    "default_popup": "popup.html",
-    "default_title": "Text to Speech Reader"
+    "default_title": "Open Text to Speech Reader Sidebar"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html"
   },
   "background": {
     "service_worker": "background.js"
