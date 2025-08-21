@@ -175,19 +175,24 @@ async function speakWithGemini(text, apiKey, voice) {
 
     if (audioData && mimeType?.startsWith("audio/")) {
       // MODIFICATION START
-      // 1. Store the audio data in local storage.
-      await chrome.storage.local.set({
-        latestGeminiAudio: { audioData, mimeType },
+      // 1. Ensure the offscreen document is active.
+      await setupOffscreenDocument("offscreen.html");
+
+      // 2. Command the offscreen document to save the data to its localStorage.
+      chrome.runtime.sendMessage({
+        action: "offscreenAudioControl",
+        control: "saveToLocalStorage",
+        audioData,
+        mimeType,
       });
 
-      // 2. Notify the sidebar that the audio file is ready.
+      // 3. Notify the sidebar that the audio file is ready.
       chrome.runtime.sendMessage({
         action: "audioStateChange",
         state: "ready",
       });
 
-      // 3. Set up the offscreen document and command it to play from storage.
-      await setupOffscreenDocument("offscreen.html");
+      // 4. Command the offscreen document to play from its localStorage.
       chrome.runtime.sendMessage({
         action: "offscreenAudioControl",
         control: "playFromStorage",

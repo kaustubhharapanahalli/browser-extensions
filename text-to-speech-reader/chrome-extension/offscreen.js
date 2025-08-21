@@ -46,27 +46,31 @@ chrome.runtime.onMessage.addListener((request) => {
   if (request.action !== "offscreenAudioControl") return;
 
   switch (request.control) {
-    // MODIFICATION START: Replaced 'play' with 'playFromStorage' for Gemini audio
+    // MODIFICATION START: Added save and updated play to use window.localStorage
+    case "saveToLocalStorage":
+      const dataToStore = {
+        audioData: request.audioData,
+        mimeType: request.mimeType,
+      };
+      localStorage.setItem("latestGeminiAudio", JSON.stringify(dataToStore));
+      break;
+
     case "playFromStorage":
-      chrome.storage.local.get("latestGeminiAudio", (result) => {
-        if (result.latestGeminiAudio) {
-          const { audioData, mimeType } = result.latestGeminiAudio;
-          const sampleRateMatch = mimeType.match(/rate=(\d+)/);
-          const sampleRate = sampleRateMatch
-            ? parseInt(sampleRateMatch[1], 10)
-            : 24000;
-          const pcmBuffer = base64ToArrayBuffer(audioData);
-          const pcm16 = new Int16Array(pcmBuffer);
-          const wavBlob = pcmToWav(pcm16, sampleRate);
-          audioUrl = URL.createObjectURL(wavBlob);
-          playAudio(audioUrl);
-        } else {
-          sendMessage({
-            state: "error",
-            error: "Could not find audio to play.",
-          });
-        }
-      });
+      const storedDataString = localStorage.getItem("latestGeminiAudio");
+      if (storedDataString) {
+        const { audioData, mimeType } = JSON.parse(storedDataString);
+        const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+        const sampleRate = sampleRateMatch
+          ? parseInt(sampleRateMatch[1], 10)
+          : 24000;
+        const pcmBuffer = base64ToArrayBuffer(audioData);
+        const pcm16 = new Int16Array(pcmBuffer);
+        const wavBlob = pcmToWav(pcm16, sampleRate);
+        audioUrl = URL.createObjectURL(wavBlob);
+        playAudio(audioUrl);
+      } else {
+        sendMessage({ state: "error", error: "Could not find audio to play." });
+      }
       break;
     // MODIFICATION END
     case "pause":
