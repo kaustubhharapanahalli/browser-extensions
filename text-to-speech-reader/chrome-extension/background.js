@@ -11,13 +11,11 @@ chrome.action.onClicked.addListener((tab) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (sender.url?.includes("offscreen.html")) {
     chrome.runtime.sendMessage(request); // Forward messages from offscreen to sidebar
-    return true;
+    return;
   }
 
   switch (request.action) {
     case "speakText":
-      // FIX: If the message is from the sidebar, sender.tab is undefined.
-      // We must query for the active tab to get the correct context.
       if (!sender.tab) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (tabs[0]) {
@@ -27,7 +25,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           }
         });
       } else {
-        // If the message is from a content script, sender.tab is available.
         handleSpeakText(request.text, sender.tab);
       }
       break;
@@ -38,7 +35,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       handleReadFromContentScript(request.text, sender.tab);
       break;
   }
-  return true; // Indicates an async response
 });
 
 /**
@@ -49,12 +45,13 @@ async function handleAudioControl(request) {
   const { ttsProvider } = await chrome.storage.sync.get("ttsProvider");
   if (ttsProvider === "gemini") {
     await setupOffscreenDocument("offscreen.html");
-    // The message is broadcast globally, and the offscreen script will pick it up.
-    chrome.runtime.sendMessage(request);
+    // FIX: Send a message with a new action name to avoid a loop.
+    // This message is intended only for the offscreen document.
+    chrome.runtime.sendMessage({ ...request, action: "offscreenAudioControl" });
   } else {
     // Handle Chrome TTS controls directly and send UI updates.
     if (request.control === "stop") {
-      chrome.tts.stop(); // This will trigger an 'interrupted' or 'end' event.
+      chrome.tts.stop();
     }
     if (request.control === "pause") {
       chrome.tts.pause();
@@ -177,17 +174,25 @@ async function speakWithGemini(text, apiKey, voice) {
     const mimeType = audioPart?.inlineData?.mimeType;
 
     if (audioData && mimeType?.startsWith("audio/")) {
-      const sampleRateMatch = mimeType.match(/rate=(\d+)/);
-      const sampleRate = sampleRateMatch
-        ? parseInt(sampleRateMatch[1], 10)
-        : 24000;
+      // MODIFICATION START
+      // 1. Store the audio data in local storage.
+      await chrome.storage.local.set({
+        latestGeminiAudio: { audioData, mimeType },
+      });
+
+      // 2. Notify the sidebar that the audio file is ready.
+      chrome.runtime.sendMessage({
+        action: "audioStateChange",
+        state: "ready",
+      });
+
+      // 3. Set up the offscreen document and command it to play from storage.
       await setupOffscreenDocument("offscreen.html");
       chrome.runtime.sendMessage({
-        action: "audioControl",
-        control: "play",
-        audioData,
-        sampleRate,
+        action: "offscreenAudioControl",
+        control: "playFromStorage",
       });
+      // MODIFICATION END
     } else {
       throw new Error("No audio content in API response.");
     }

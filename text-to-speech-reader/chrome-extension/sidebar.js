@@ -195,6 +195,11 @@ document.addEventListener("DOMContentLoaded", () => {
           showStatus("Generating audio...");
           playerDiv.classList.remove("hidden");
           break;
+        // MODIFICATION START
+        case "ready":
+          showStatus("Audio file is ready to play.");
+          break;
+        // MODIFICATION END
         case "playing":
           showStatus("Playing...");
           playPauseBtn.innerHTML = pauseIcon;
